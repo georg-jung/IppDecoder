@@ -574,7 +574,23 @@ class IppParser
                 if (valueLen == 11)
                 {
                     // 11 bytes as per RFC2579 DateAndTime
-                    ushort year = (ushort)((data[index] << 8) | data[index+1]);
+                    // Some printers incorrectly encode the year as two bytes representing year/100 and year%100.
+                    // We use a heuristic to detect this: if the big-endian year is > 3000 and the second byte is < 100,
+                    // we assume it's the non-compliant format.
+                    ushort year_be = (ushort)((data[index] << 8) | data[index + 1]);
+                    byte low_byte = data[index + 1];
+                    int year;
+                    if (year_be > 3000 && low_byte < 100)
+                    {
+                        // Non-compliant format: year = byte1*100 + byte2
+                        year = data[index] * 100 + low_byte;
+                    }
+                    else
+                    {
+                        // Standard big-endian format
+                        year = year_be;
+                    }
+
                     byte month = data[index+2];
                     byte day = data[index+3];
                     byte hour = data[index+4];
