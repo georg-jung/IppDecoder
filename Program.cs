@@ -277,16 +277,8 @@ class IppMessage
                 }
                 return i.ToString();
             case DateTimeOffset dto:
-                // Include offset in format, include a decimal second if fraction exists
-                string basic = dto.ToString("yyyy-MM-ddTHH:mm:ss");
-                if (dto.Millisecond != 0)
-                {
-                    // Millisecond here actually represents deciseconds * 100. (We only had one decimal digit precision)
-                    int deci = dto.Millisecond / 100;
-                    basic += "." + deci;
-                }
-                string tz = dto.ToString("K"); // includes offset like +02:00
-                return basic + tz;
+                // Millisecond here actually represents deciseconds * 100. (We only had one decimal digit precision)
+                return dto.ToString("o");
             case ResolutionValue res:
                 return $"{res.X}x{res.Y} {(res.IsDotsPerInch ? "dpi" : "dpcm")}";
             case RangeValue range:
