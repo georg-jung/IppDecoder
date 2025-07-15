@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'master*' ]
+    paths-ignore:
+    - '**.md'
+  pull_request:
+    branches: [ 'master*' ]
+    paths-ignore:
+    - '**.md'
+
+jobs:
+  publish-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.x # `global-json-file: global.json` would install the exact version without considering roll-forward, see https://github.com/actions/setup-dotnet/pull/481
+
+    - uses: dotnet/nbgv@v0.4
+      id: nbgv
+
+    - name: Publish
+      run: dotnet publish IppDecoder.csproj -c Release -o publish/ /p:ContinuousIntegrationBuild=true
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: IppDecoder-${{ steps.nbgv.outputs.SemVer2 }}-windows
+        path: |
+          publish/**/*.exe
+
+  publish-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.x # `global-json-file: global.json` would install the exact version without considering roll-forward, see https://github.com/actions/setup-dotnet/pull/481
+
+    - uses: dotnet/nbgv@v0.4
+      id: nbgv
+
+    - name: Publish
+      run: dotnet publish IppDecoder.csproj -c Release -o publish/ /p:ContinuousIntegrationBuild=true
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: IppDecoder-${{ steps.nbgv.outputs.SemVer2 }}-linux
+        path: |
+          publish/**/*
+          !publish/**/*.dbg
+          !publish/**/*.xml
